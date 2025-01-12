@@ -41,7 +41,6 @@ impl<'a, T: Debug> RadixNode<'a, T> {
                 }
                 break;
             } else if &path == key {
-                println!("THIS {} {}", path, key);
                 match node.val {
                     Some(ref old_val) => return Err(format!("Value is not None, {:?}", old_val)),
                     None => {
@@ -56,7 +55,6 @@ impl<'a, T: Debug> RadixNode<'a, T> {
             let (base_key, splitted_key) = split_string.split_at(path.len());
             let _ = self.split_node(base_key, splitted_key);
 
-            println!("Splitted and Add: {} {:?}", path, &val);
             return self.add(path, val);
         }
 
@@ -103,13 +101,4 @@ impl<'a, T: Debug> Default for RadixNode<'a, T> {
     fn default() -> Self {
         Self::new(None)
     }
-}
-
-fn main() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
-
-    node.add("/home", Some(String::from("Home")));
-    let val = node.get("/home");
-
-    println!("{}", val.unwrap())
 }
