@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Debug};
 
-struct RadixTree {}
+mod tests;
 
 #[derive(Debug)]
 pub struct RadixNode<'a, T: Debug> {
