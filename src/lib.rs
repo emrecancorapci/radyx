@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Debug};
 
+#[cfg(test)]
 mod tests;
 
 #[derive(Debug)]
