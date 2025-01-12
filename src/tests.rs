@@ -4,8 +4,8 @@ use crate::{find_common_index, RadixNode};
 fn basic_usage() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    let _ = node.add("/home", Some(String::from("Home")));
-    let _ = node.add("/home/more", Some(String::from("Not Home")));
+    let _ = node.insert("/home", String::from("Home"));
+    let _ = node.insert("/home/more", String::from("Not Home"));
 
     assert_eq!(&String::from("Home"), node.get("/home").unwrap());
 }
@@ -14,9 +14,9 @@ fn basic_usage() {
 fn two_leaf() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    let _ = node.add("/home", Some(String::from("Home")));
-    let _ = node.add("/home/prim", Some(String::from("Prim")));
-    let _ = node.add("/home/sec", Some(String::from("Sec")));
+    let _ = node.insert("/home", String::from("Home"));
+    let _ = node.insert("/home/prim", String::from("Prim"));
+    let _ = node.insert("/home/sec", String::from("Sec"));
 
     assert_eq!(&String::from("Prim"), node.get("/home/prim").unwrap());
     assert_eq!(&String::from("Sec"), node.get("/home/sec").unwrap());
@@ -26,9 +26,9 @@ fn two_leaf() {
 fn short_splitter_leaf() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    let _ = node.add("/home", Some(String::from("Home")));
-    let _ = node.add("/home/pasta", Some(String::from("Pasta")));
-    let _ = node.add("/home/pa", Some(String::from("Pa?")));
+    let _ = node.insert("/home", String::from("Home"));
+    let _ = node.insert("/home/pasta", String::from("Pasta"));
+    let _ = node.insert("/home/pa", String::from("Pa?"));
 
     assert_eq!(&String::from("Pasta"), node.get("/home/pasta").unwrap());
     assert_eq!(&String::from("Pa?"), node.get("/home/pa").unwrap());
@@ -38,9 +38,9 @@ fn short_splitter_leaf() {
 fn long_splitting_leaf() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    let _ = node.add("/home", Some(String::from("Home")));
-    let _ = node.add("/home/pasta", Some(String::from("Pasta")));
-    let _ = node.add("/home/pastafarian", Some(String::from("Pastafarian")));
+    let _ = node.insert("/home", String::from("Home"));
+    let _ = node.insert("/home/pasta", String::from("Pasta"));
+    let _ = node.insert("/home/pastafarian", String::from("Pastafarian"));
 
     assert_eq!(&String::from("Pasta"), node.get("/home/pasta").unwrap());
     assert_eq!(&String::from("Pastafarian"), node.get("/home/pastafarian").unwrap());
@@ -50,9 +50,9 @@ fn long_splitting_leaf() {
 fn middle_splitting_leaf() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    let _ = node.add("/home", Some(String::from("Home")));
-    let _ = node.add("/home/pasta", Some(String::from("Pasta")));
-    let _ = node.add("/home/party", Some(String::from("Party")));
+    let _ = node.insert("/home", String::from("Home"));
+    let _ = node.insert("/home/pasta", String::from("Pasta"));
+    let _ = node.insert("/home/party", String::from("Party"));
 
     assert_eq!(&String::from("Pasta"), node.get("/home/pasta").unwrap());
     assert_eq!(&String::from("Party"), node.get("/home/party").unwrap());
@@ -62,10 +62,10 @@ fn middle_splitting_leaf() {
 fn two_spliting_leaf() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    assert_eq!(Ok(()), node.add("/home", Some(String::from("Home"))));
-    assert_eq!(Ok(()), node.add("/home/pasta", Some(String::from("Pasta"))));
-    assert_eq!(Ok(()), node.add("/home/pastry", Some(String::from("Pastry"))));
-    assert_eq!(Ok(()), node.add("/home/pa", Some(String::from("Pa"))));
+    assert_eq!(Ok(()), node.insert("/home", String::from("Home")));
+    assert_eq!(Ok(()), node.insert("/home/pasta", String::from("Pasta")));
+    assert_eq!(Ok(()), node.insert("/home/pastry", String::from("Pastry")));
+    assert_eq!(Ok(()), node.insert("/home/pa", String::from("Pa")));
 
     assert_eq!(Some(&String::from("Pasta")), node.get("/home/pasta"));
     assert_eq!(Some(&String::from("Pastry")), node.get("/home/pastry"));
@@ -76,12 +76,12 @@ fn two_spliting_leaf() {
 fn random_splits() {
     let mut node: RadixNode<'_, String> = RadixNode::default();
 
-    assert_eq!(Ok(()), node.add("/home", Some(String::from("Home"))));
-    assert_eq!(Ok(()), node.add("/home/pasta", Some(String::from("Pasta"))));
-    assert_eq!(Ok(()), node.add("/home/party", Some(String::from("Party"))));
-    assert_eq!(Ok(()), node.add("/home/passive", Some(String::from("Passive"))));
-    assert_eq!(Ok(()), node.add("/home/pa", Some(String::from("Pa"))));
-    assert_eq!(Ok(()), node.add("/hone/pa", Some(String::from("Away From Pa"))));
+    assert_eq!(Ok(()), node.insert("/home", String::from("Home")));
+    assert_eq!(Ok(()), node.insert("/home/pasta", String::from("Pasta")));
+    assert_eq!(Ok(()), node.insert("/home/party", String::from("Party")));
+    assert_eq!(Ok(()), node.insert("/home/passive", String::from("Passive")));
+    assert_eq!(Ok(()), node.insert("/home/pa", String::from("Pa")));
+    assert_eq!(Ok(()), node.insert("/hone/pa", String::from("Away From Pa")));
 
 
     assert_eq!(Some(&String::from("Pasta")), node.get("/home/pasta"));

@@ -10,21 +10,28 @@ pub struct RadixNode<'a, T: Debug> {
 }
 
 impl<'a, T: Debug> RadixNode<'a, T> {
-    fn new(val: Option<T>) -> RadixNode<'a, T> {
+    pub fn new(val: T) -> RadixNode<'a, T> {
         RadixNode {
             nodes: HashMap::new(),
-            val,
+            val: Some(val),
         }
     }
 
-    pub fn add(&mut self, path: &'a str, val: Option<T>) -> Result<(), String> {
+    pub fn new_empty() -> RadixNode<'a, T> {
+        RadixNode {
+            nodes: HashMap::new(),
+            val: None,
+        }
+    }
+
+    pub fn insert(&mut self, path: &'a str, val: T) -> Result<(), String> {
         let mut split_string = "";
 
         if self.nodes.is_empty() {
             self.nodes.insert(path, Box::new(RadixNode::new(val)));
             return Ok(());
         } else if path.is_empty() {
-            self.val = val;
+            self.set_value(Some(val));
             return Ok(());
         }
 
@@ -41,13 +48,13 @@ impl<'a, T: Debug> RadixNode<'a, T> {
 
             if splitting_index == key.len() {
                 if path.starts_with(key) {
-                    return node.add(&path[key.len()..], val);
+                    return node.insert(&path[key.len()..], val);
                 }
 
                 let (base_key, splitted_key) = path.split_at(splitting_index);
                 let _ = self.split_node(base_key, splitted_key);
 
-                return self.add(path, val);
+                return self.insert(path, val);
             }
 
             if splitting_index == path.len() {
@@ -59,14 +66,14 @@ impl<'a, T: Debug> RadixNode<'a, T> {
                 let (base_key, splitted_key) = key.split_at(splitting_index);
                 let _ = self.split_node(base_key, splitted_key);
 
-                return self.add(path, val);
+                return self.insert(path, val);
             }
 
             if &path == key {
                 match node.val {
                     Some(ref old_val) => return Err(format!("Value is not None, {:?}", old_val)),
                     None => {
-                        node.set_value(val);
+                        node.set_value(Some(val));
                         return Ok(());
                     }
                 }
@@ -75,36 +82,18 @@ impl<'a, T: Debug> RadixNode<'a, T> {
             let (base_key, splitted_key) = key.split_at(splitting_index);
             let _ = self.split_node(base_key, splitted_key);
 
-            return self.add(path, val);
+            return self.insert(path, val);
         }
 
         if !split_string.is_empty() {
             let (base_key, splitted_key) = split_string.split_at(path.len());
             let _ = self.split_node(base_key, splitted_key);
 
-            return self.add(path, val);
+            return self.insert(path, val);
         }
 
         self.nodes.insert(path, Box::new(RadixNode::new(val)));
         return Ok(());
-    }
-
-    fn split_node(&mut self, base_key: &'a str, splitted_key: &'a str) -> Result<(), String> {
-        let node = self
-            .nodes
-            .remove(format!("{base_key}{splitted_key}").as_str())
-            .unwrap();
-
-        let mut main_node = RadixNode::new(None);
-
-        main_node.add(splitted_key, node.val)?;
-
-        self.nodes.insert(base_key, Box::new(main_node));
-        return Ok(());
-    }
-
-    fn set_value(&mut self, val: Option<T>) {
-        self.val = val;
     }
 
     pub fn get(&self, path: &'a str) -> Option<&T> {
@@ -125,11 +114,30 @@ impl<'a, T: Debug> RadixNode<'a, T> {
         }
         return None;
     }
+
+    fn split_node(&mut self, base_key: &'a str, splitted_key: &'a str) -> Result<(), String> {
+        let node = self
+            .nodes
+            .remove(format!("{base_key}{splitted_key}").as_str())
+            .unwrap();
+
+        let mut main_node: RadixNode<'_, T> = RadixNode::new_empty();
+
+        main_node.insert(splitted_key, node.val.unwrap())?;
+
+        self.nodes.insert(base_key, Box::new(main_node));
+        return Ok(());
+    }
+
+    fn set_value(&mut self, val: Option<T>) {
+        self.val = val;
+    }
+
 }
 
 impl<'a, T: Debug> Default for RadixNode<'a, T> {
     fn default() -> Self {
-        Self::new(None)
+        Self::new_empty()
     }
 }
 
