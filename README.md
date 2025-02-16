@@ -1,4 +1,4 @@
-# Radix Tree in Rust
+# RADYX - A Basic Radix Tree Implementation
 
 A Rust implementation of a Radix Tree (also known as a Compact Prefix Tree) designed to be efficient, scalable, and easy to use. Radix Trees are widely used in applications such as autocomplete systems, routing tables, and prefix-based search.
 
@@ -8,24 +8,24 @@ Add the following to your Cargo.toml:
 
 ```toml
 [dependencies]
-radix_tree = { git = "https://github.com/emrecancorapci/radix-tree.git" }
+radyx = "*"
 ```
 
-Then, include it in your project:
+or use the cargo cli
 
-```rust
-use radix_tree::RadixNode;
+```bash
+cargo add radyx
 ```
 
 ### Usage
 
 ```rust
-use radix_tree::RadixNode;
+use radyx::Radyx;
 
-let mut node: RadixNode<'_, String> = RadixNode::default();
+let mut node: Radyx<&str> = Radyx::default();
 
-let _ = node.insert("/home", String::from("Home"));
-let _ = node.insert("/nothome", String::from("Not Home"));
+node.insert("/home", "Home");
+node.insert("/nothome", "Elsewhere");
 
-assert_eq!(&String::from("Home"), node.get("/home").unwrap());
+assert_eq!(Some(&"Home"), node.get("/home"));
 ```

@@ -1,6 +1,12 @@
 [package]
-name = "radix-tree"
-version = "0.1.0"
+name = "radyx"
+version = "1.0.0"
+description = "A basic radix tree implementation"
+authors = ["Emre Can Corapci"]
+categories = ["data-structures"]
+keywords = ["radix", "tree"]
+repository = "https://github.com/emrecancorapci/radyx"
+license = "MIT"
 edition = "2021"
 
 [dependencies]
