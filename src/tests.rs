@@ -1,104 +1,194 @@
-use crate::{find_common_index, RadixNode};
+use std::collections::HashMap;
+
+use crate::{longest_common_prefix, RadixNode};
 
 #[test]
-fn basic_usage() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+fn basic() {
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    let _ = node.insert("/home", String::from("Home"));
-    let _ = node.insert("/home/more", String::from("Not Home"));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/more", "More than Home");
 
-    assert_eq!(&String::from("Home"), node.get("/home").unwrap());
+    assert_eq!(Some(&"Home"), node.get("/home"));
+    assert_eq!(Some(&"More than Home"), node.get("/home/more"));
 }
 
 #[test]
 fn two_leaf() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    let _ = node.insert("/home", String::from("Home"));
-    let _ = node.insert("/home/prim", String::from("Prim"));
-    let _ = node.insert("/home/sec", String::from("Sec"));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/prim", "Prim");
+    let _ = node.insert("/home/sec", "Sec");
 
-    assert_eq!(&String::from("Prim"), node.get("/home/prim").unwrap());
-    assert_eq!(&String::from("Sec"), node.get("/home/sec").unwrap());
+    assert_eq!(Some(&"Prim"), node.get("/home/prim"));
+    assert_eq!(Some(&"Sec"), node.get("/home/sec"));
 }
 
 #[test]
 fn short_splitter_leaf() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    let _ = node.insert("/home", String::from("Home"));
-    let _ = node.insert("/home/pasta", String::from("Pasta"));
-    let _ = node.insert("/home/pa", String::from("Pa?"));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/mountain", "Mountain");
+    let _ = node.insert("/home/mount", "Mount");
 
-    assert_eq!(&String::from("Pasta"), node.get("/home/pasta").unwrap());
-    assert_eq!(&String::from("Pa?"), node.get("/home/pa").unwrap());
+    assert_eq!(Some(&"Mountain"), node.get("/home/mountain"));
+    assert_eq!(Some(&"Mount"), node.get("/home/mount"));
 }
 
 #[test]
 fn long_splitting_leaf() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    let _ = node.insert("/home", String::from("Home"));
-    let _ = node.insert("/home/pasta", String::from("Pasta"));
-    let _ = node.insert("/home/pastafarian", String::from("Pastafarian"));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/mount", "Mount");
+    let _ = node.insert("/home/mountain", "Mountain");
 
-    assert_eq!(&String::from("Pasta"), node.get("/home/pasta").unwrap());
-    assert_eq!(&String::from("Pastafarian"), node.get("/home/pastafarian").unwrap());
+    assert_eq!(&"Mount", node.get("/home/mount").unwrap());
+    assert_eq!(&"Mountain", node.get("/home/mountain").unwrap());
 }
 
 #[test]
 fn middle_splitting_leaf() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    let _ = node.insert("/home", String::from("Home"));
-    let _ = node.insert("/home/pasta", String::from("Pasta"));
-    let _ = node.insert("/home/party", String::from("Party"));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/mountain", "Mountain");
+    let _ = node.insert("/home/maintain", "Maintain");
 
-    assert_eq!(&String::from("Pasta"), node.get("/home/pasta").unwrap());
-    assert_eq!(&String::from("Party"), node.get("/home/party").unwrap());
+    assert_eq!(Some(&"Mountain"), node.get("/home/mountain"));
+    assert_eq!(Some(&"Maintain"), node.get("/home/maintain"));
 }
 
 #[test]
 fn two_spliting_leaf() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    assert_eq!(Ok(()), node.insert("/home", String::from("Home")));
-    assert_eq!(Ok(()), node.insert("/home/pasta", String::from("Pasta")));
-    assert_eq!(Ok(()), node.insert("/home/pastry", String::from("Pastry")));
-    assert_eq!(Ok(()), node.insert("/home/pa", String::from("Pa")));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/maintaining", "Maintaining");
+    let _ = node.insert("/home/maintainer", "Maintainer");
+    let _ = node.insert("/home/main", "Main");
 
-    assert_eq!(Some(&String::from("Pasta")), node.get("/home/pasta"));
-    assert_eq!(Some(&String::from("Pastry")), node.get("/home/pastry"));
-    assert_eq!(Some(&String::from("Pa")), node.get("/home/pa"));
+    assert_eq!(Some(&"Maintaining"), node.get("/home/maintaining"));
+    assert_eq!(Some(&"Maintainer"), node.get("/home/maintainer"));
+    assert_eq!(Some(&"Main"), node.get("/home/main"));
+}
+
+#[test]
+fn fake_two_spliting_leaf() {
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
+
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/maintaining", "Maintaining");
+    let _ = node.insert("/home/maintainer", "Maintainer");
+    let _ = node.insert("/home/main/", "Main");
+
+    assert_eq!(Some(&"Maintaining"), node.get("/home/maintaining"));
+    assert_eq!(Some(&"Maintainer"), node.get("/home/maintainer"));
+    assert_eq!(Some(&"Main"), node.get("/home/main/"));
 }
 
 #[test]
 fn random_splits() {
-    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
 
-    assert_eq!(Ok(()), node.insert("/home", String::from("Home")));
-    assert_eq!(Ok(()), node.insert("/home/pasta", String::from("Pasta")));
-    assert_eq!(Ok(()), node.insert("/home/party", String::from("Party")));
-    assert_eq!(Ok(()), node.insert("/home/passive", String::from("Passive")));
-    assert_eq!(Ok(()), node.insert("/home/pa", String::from("Pa")));
-    assert_eq!(Ok(()), node.insert("/hone/pa", String::from("Away From Pa")));
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home/maintaining", "Maintaining");
+    let _ = node.insert("/home/maintainer", "Maintainer");
+    let _ = node.insert("/home/main", "Main");
+    let _ = node.insert("/home/master", "Master");
+    let _ = node.insert("/hone/main", "Away From Home");
 
-
-    assert_eq!(Some(&String::from("Pasta")), node.get("/home/pasta"));
-    assert_eq!(Some(&String::from("Party")), node.get("/home/party"));
-    assert_eq!(Some(&String::from("Pa")), node.get("/home/pa"));
-    assert_eq!(Some(&String::from("Away From Pa")), node.get("/home/pa"));
-    assert_eq!(Some(&String::from("Passive")), node.get("/home/passive"));
-    
+    assert_eq!(Some(&"Maintaining"), node.get("/home/maintaining"));
+    assert_eq!(Some(&"Maintainer"), node.get("/home/maintainer"));
+    assert_eq!(Some(&"Main"), node.get("/home/main"));
+    assert_eq!(Some(&"Away From Home"), node.get("/hone/main"));
+    assert_eq!(Some(&"Master"), node.get("/home/master"));
 }
 
 #[test]
-fn fci_commutativity() {
+fn overwrite_value() {
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
+
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/home", "New Home"); // Overwrite value
+
+    assert_eq!(Some(&"New Home"), node.get("/home")); // Ensure new value is stored
+}
+
+#[test]
+fn empty_and_root_key() {
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
+
+    let _ = node.insert("", "Root");
+    dbg!(&node);
+    let _ = node.insert("/", "Root Slash");
+    dbg!(&node);
+
+    assert_eq!(Some(&"Root"), node.get(""));
+    assert_eq!(Some(&"Root Slash"), node.get("/"));
+}
+
+#[test]
+fn case_sensitivity() {
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
+
+    let _ = node.insert("/home", "Home");
+    let _ = node.insert("/Home", "Capital Home");
+
+    assert_eq!(Some(&"Home"), node.get("/home"));
+    assert_eq!(Some(&"Capital Home"), node.get("/Home"));
+}
+
+#[test]
+fn non_existent_keys() {
+    let mut node: RadixNode<'_, &str> = RadixNode::default();
+
+    let _ = node.insert("/home", "Home");
+
+    assert_eq!(None, node.get("/hom"));
+    assert_eq!(None, node.get("/homer"));
+    assert_eq!(None, node.get("/nonexistent"));
+    assert_eq!(None, node.get("/home/missing"));
+}
+
+#[test]
+fn large_scale_insertions() {
+    let mut node: RadixNode<'_, String> = RadixNode::default();
+    let mut value_map = HashMap::new();
+
+    for i in 0..1000 {
+        let k = format!("/key{}", i);
+        let v = format!("Value{}", i);
+        value_map.insert(k, v);
+    }
+
+    for (k, v) in value_map.iter() {
+        let _ = node.insert(&k, v.to_string());
+    }
+
+    for i in 0..1000 {
+        let key = format!("/key{}", i);
+        assert_eq!(Some(&format!("Value{}", i)), node.get(&key));
+    }
+
+    assert_eq!(None, node.get("/key1001"));
+}
+
+#[test]
+fn lcp_commutativity() {
     let str1 = "/Pasta";
     let str2 = "/Pasanger";
     let str3 = "/s";
     let str4 = "/f";
 
-    assert_eq!(find_common_index(str2, str1), find_common_index(str1, str2));
-    assert_eq!(find_common_index(str3, str4), find_common_index(str4, str3));
+    assert_eq!(
+        longest_common_prefix(str2, str1),
+        longest_common_prefix(str1, str2)
+    );
+    assert_eq!(
+        longest_common_prefix(str3, str4),
+        longest_common_prefix(str4, str3)
+    );
 }
