@@ -10,3 +10,10 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
+
+[dev-dependencies]
+divan = "0.1.17"
+
+[[bench]]
+name = "example"
+harness = false
